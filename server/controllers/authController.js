@@ -73,7 +73,29 @@ const loginUser = async (req, res) => {
     }
 }
 
+const getUserProfile = async (req, res) => {
+    try{
+        const user = await User.findByPk(req.user.id, {
+            attributes: {exclude: ['password']}
+        })
+
+        if(!user){
+            return res.status(404).json({ error : "User not Found" })
+        }
+
+        res.status(200).json({
+            message: "Welcome To Your Profile Dashboard",
+            profile : user
+        })
+
+    }
+    catch(error){
+        res.status(500).json({ error : "Server Error!", details: error.message});
+    }
+}
+
 module.exports = {
     registerUser,
-    loginUser
+    loginUser,
+    getUserProfile
 }

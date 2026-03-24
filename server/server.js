@@ -2,7 +2,13 @@ require('dotenv').config();
 const express = require('express');
 
 const { connectDB, sequelize } = require('./config/db');
+
 const user = require('./models/user');
+const stock = require('./models/stock');
+const portfolio = require('./models/portfolio');
+
+user.hasMany(portfolio, {foreignKey: 'userID'});
+portfolio.belongsTo(user, {foreignKey: 'userID'});
 
 const app = express();
 connectDB();
