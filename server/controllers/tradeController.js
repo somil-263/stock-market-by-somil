@@ -1,66 +1,36 @@
-const {sequelize} = require('../config/db');
 const User = require('../models/user');
-const Stock = require('../models/stock');
-const portfolio = require('../models/portfolio');
-const Transaction = require('../models/transaction');
+
+const tradeService = require('../services/tradeService');
 
 const buyStock = async (req, res) => {
-    const t = await sequelize.transaction();
-
     try{
         const {symbol, quantity} = req.body;
         const userId = req.user.id;
 
-        const stock = await Stock.findOne({where: {symbol: symbol.toUpperCase()}});
-        if(!stock){
-            return res.status(404).json({message: "Stock not found"});
-        }
+        if(quantity <= 0) return res.status(400).json({message: "Quantity must be greater than 0"})
 
-        const user = await User.findByPk(userId);
-        if(!user){
-            return res.status(404).json({message: "User not found"});
-        }
+        const result = await tradeService.executeBuy(userId, symbol, quantity);
 
-        const totalCost = stock.currentPrice * quantity;
-        if(user.balance < totalCost){
-            return res.status(400).json({message: "Insufficient balance"});
-        }
-
-        user.balance -= totalCost;
-        await user.save({transaction: t});
-
-        let portfolioItem = await portfolio.findOne({where: {userId, stockSymbol: stock.symbol}, transaction: t});
-        if(portfolioItem){
-            const oldMoney = portfolioItem.quantity * portfolioItem.averagePrice;
-            const newTotalValue = oldMoney + totalCost;
-
-            portfolioItem.quantity += quantity;
-            portfolioItem.averagePrice = newTotalValue / portfolioItem.quantity;
-            await portfolioItem.save({transaction: t});
-        }
-        else{
-            await portfolio.create({
-                userId,
-                stockSymbol: stock.symbol,
-                quantity,
-                averagePrice: stock.currentPrice
-            }, {transaction: t});
-        }
-
-        await Transaction.create({
-            userId,
-            stockSymbol: stock.symbol,
-            transactionType: 'BUY',
-            quantity,
-            priceAtTransaction: stock.currentPrice,
-            totalAmount: totalCost
-        }, { transaction: t });
-
-        await t.commit();
-        res.status(200).json({message: "Stock bought successfully", remainingBalance: user.balance});
+        res.status(200).json(result)
     }
     catch(error){
-        await t.rollback();
+        res.status(500).json({message: "Internal server error", details: error.message});
+    }
+}
+
+const sellStock = async (req, res) => {
+    try{
+        const {symbol, quantity} = req.body;
+        if(quantity <= 0){
+            return res.status(400).json({message: "Quantity must be greater than 0"});
+        }
+        const userId = req.user.id;
+
+        const result = await tradeService.executeSell(userId, symbol, quantity);
+
+        res.status(200).json(result);
+    }
+    catch(error){
         res.status(500).json({message: "Internal server error", details: error.message});
     }
 }
@@ -68,16 +38,16 @@ const buyStock = async (req, res) => {
 const getPortfolio = async (req, res) => {
     try{
         const userId = req.user.id;
-
-        const myPortfolio = await portfolio.findAll({where: {userId: userId}, attributes: ['stockSymbol', 'quantity', 'averagePrice', 'updatedAt']});
-        
         const user = await User.findByPk(userId);
+
+        const result = await tradeService.executePortfolio(userId);
+        
 
         res.status(200).json({
             message: "My Portfolio",
             currentBalance: user.balance,
-            totalUniqueStocks: myPortfolio.length,
-            portfolio: myPortfolio
+            totalUniqueStocks: result.length,
+            portfolio: result
         })
     }
     catch(error){
@@ -85,7 +55,27 @@ const getPortfolio = async (req, res) => {
     }
 }
 
+const getPassbook = async (req, res) => {
+    try{
+        const userId = req.user.id;
+        
+        const history = await tradeService.executeTransactionHistory(userId);
+        
+        res.status(200).json({
+            message: "Passbook",
+            totalTransaction: history.length,
+            history: history
+        })
+    }
+    catch(error){
+        res.status(500).json({message: "Internal server error", details: error.message})
+    }
+}
+
+
 module.exports = {
     buyStock,
-    getPortfolio
+    sellStock,
+    getPortfolio,
+    getPassbook
 }

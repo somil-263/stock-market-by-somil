@@ -28,6 +28,14 @@ const User = sequelize.define('User', {
     balance:{
         type: DataTypes.FLOAT,
         defaultValue: 100000.00
+    },
+    isVerified:{
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    opt:{
+        type: DataTypes.STRING,
+        allowNull: true
     }
 },
 {
