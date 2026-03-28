@@ -33,7 +33,7 @@ const User = sequelize.define('User', {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
-    opt:{
+    otp:{
         type: DataTypes.STRING,
         allowNull: true
     }

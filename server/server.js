@@ -31,6 +31,10 @@ app.get('/', (req, res) => {
     res.send('Hello World!, I am somil');
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+if(PORT !== 'test'){
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+
+module.exports = app;

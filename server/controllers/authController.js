@@ -16,9 +16,14 @@ const registerUser = async (req, res) => {
             return res.status(400).json({message: "Please provide a valid email"});
         }
 
-        const userExist = await User.findOne({where: {email}});
-        if(userExist){
-            return res.status(400).json({message: "User already exists"});
+        const emailExists = await User.findOne({ where: { email } });
+        if (emailExists) {
+            return res.status(400).json({ message: "Email already exists" });
+        }
+
+        const usernameExists = await User.findOne({ where: { username } });
+        if (usernameExists) {
+            return res.status(400).json({ message: "Username already exists" });
         }
 
         const salt = await bcrypt.genSalt(10);
