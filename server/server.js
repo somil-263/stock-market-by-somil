@@ -7,6 +7,7 @@ const user = require('./models/user');
 const stock = require('./models/stock');
 const portfolio = require('./models/portfolio');
 const transaction = require('./models/transaction');
+const cors = require('cors');
 
 user.hasMany(portfolio, {foreignKey: 'userID'});
 portfolio.belongsTo(user, {foreignKey: 'userID'});
@@ -16,6 +17,7 @@ transaction.belongsTo(user, {foreignKey: 'userId'});
 const app = express();
 connectDB();
 
+app.use(cors());
 app.use(express.json());
 
 sequelize.sync({alter: true})
