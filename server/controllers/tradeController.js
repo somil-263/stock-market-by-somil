@@ -4,12 +4,12 @@ const tradeService = require('../services/tradeService');
 
 const buyStock = async (req, res) => {
     try{
-        const {symbol, quantity} = req.body;
+        const {symbol, quantity, currentPrice} = req.body;
         const userId = req.user.id;
 
         if(quantity <= 0) return res.status(400).json({message: "Quantity must be greater than 0"})
 
-        const result = await tradeService.executeBuy(userId, symbol, quantity);
+        const result = await tradeService.executeBuy(userId, symbol, quantity, currentPrice);
 
         res.status(200).json(result)
     }
@@ -20,20 +20,23 @@ const buyStock = async (req, res) => {
 
 const sellStock = async (req, res) => {
     try{
-        const {symbol, quantity} = req.body;
+        const {symbol, quantity, currentPrice} = req.body;
         if(quantity <= 0){
             return res.status(400).json({message: "Quantity must be greater than 0"});
         }
         const userId = req.user.id;
 
-        const result = await tradeService.executeSell(userId, symbol, quantity);
+        const result = await tradeService.executeSell(userId, symbol, quantity, currentPrice);
+
 
         res.status(200).json(result);
     }
     catch(error){
         res.status(500).json({message: "Internal server error", details: error.message});
+        console.log(error.message);
     }
 }
+
 
 const getPortfolio = async (req, res) => {
     try{

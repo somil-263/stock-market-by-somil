@@ -4,18 +4,15 @@ const Stock = require('../models/stock');
 const Portfolio = require('../models/portfolio');
 const Transaction = require('../models/transaction');
 
-const executeBuy = async (userId, symbol, quantity) => {
+const executeBuy = async (userId, symbol, quantity, currentPrice) => {
     const t = await sequelize.transaction();
 
     try{
-        const stock = await Stock.findOne({where: {symbol: symbol.toUpperCase()}});
-        if(!stock) throw new Error("Stock not found");
-
         const user = await User.findByPk(userId, {
             transaction: t,
             lock: t.LOCK.UPDATE
         });
-        const totalCost = quantity * stock.currentPrice;
+        const totalCost = quantity * currentPrice;
 
         if(totalCost > user.balance) throw new Error("Insufficient balance");
         
@@ -23,7 +20,7 @@ const executeBuy = async (userId, symbol, quantity) => {
         await user.save({transaction: t});
 
         const portfolioItem = await Portfolio.findOne({
-            where: {userId, stockSymbol: stock.symbol},
+            where: {userId, stockSymbol: symbol.toUpperCase()},
             transaction: t,
             lock: t.LOCK.UPDATE
         });
@@ -37,18 +34,18 @@ const executeBuy = async (userId, symbol, quantity) => {
         else{
             await Portfolio.create({
                 userId,
-                stockSymbol: stock.symbol,
+                stockSymbol: symbol.toUpperCase(),
                 quantity,
-                averagePrice: stock.currentPrice
+                averagePrice: currentPrice
             }, {transaction: t});
         }
 
         await Transaction.create({
             userId,
-            stockSymbol: stock.symbol,
+            stockSymbol: symbol.toUpperCase(),
             transactionType: "BUY",
             quantity,
-            priceAtTransaction: stock.currentPrice,
+            priceAtTransaction: currentPrice,
             totalAmount: totalCost
         }, {transaction: t});
         
@@ -64,12 +61,10 @@ const executeBuy = async (userId, symbol, quantity) => {
     }
 }
 
-const executeSell = async (userId, symbol, quantity) => {
+const executeSell = async (userId, symbol, quantity, currentPrice) => {
     const t = await sequelize.transaction();
 
     try{
-        const stock = await Stock.findOne({where: {symbol: symbol.toUpperCase()}});
-        if(!stock) throw new Error("Stock not found");
 
         const user = await User.findByPk(userId, {
             transaction: t,
@@ -80,7 +75,7 @@ const executeSell = async (userId, symbol, quantity) => {
         if(quantity <= 0) throw new Error("Invalid quantity");
 
         const PortfolioItem = await Portfolio.findOne({
-            where: {userId, stockSymbol: stock.symbol},
+            where: {userId, stockSymbol: symbol.toUpperCase()},
             transaction: t,
             lock: t.LOCK.UPDATE
         });
@@ -88,9 +83,9 @@ const executeSell = async (userId, symbol, quantity) => {
         
         if(PortfolioItem.quantity < quantity) throw new Error("Insufficient quantity");
 
-        const totalAmount = quantity * stock.currentPrice;
+        const totalAmount = quantity * parseFloat(currentPrice);
 
-        user.balance += totalAmount;
+        user.balance = parseFloat(user.balance) + parseFloat(totalAmount);
         await user.save({transaction: t});
 
         PortfolioItem.quantity -= quantity;
@@ -103,10 +98,10 @@ const executeSell = async (userId, symbol, quantity) => {
 
         await Transaction.create({
             userId,
-            stockSymbol: stock.symbol,
+            stockSymbol: symbol.toUpperCase(),
             transactionType: "SELL",
             quantity,
-            priceAtTransaction: stock.currentPrice,
+            priceAtTransaction: currentPrice,
             totalAmount: totalAmount
         }, {transaction: t});
         

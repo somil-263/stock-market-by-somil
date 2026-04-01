@@ -10,9 +10,9 @@ const transaction = require('./models/transaction');
 
 const cors = require('cors');
 
-user.hasMany(portfolio, {foreignKey: 'userID'});
+user.hasMany(portfolio, {foreignKey: 'userID', onDelete: 'CASCADE'});
 portfolio.belongsTo(user, {foreignKey: 'userID'});
-user.hasMany(transaction, {foreignKey: 'userId'});
+user.hasMany(transaction, {foreignKey: 'userId', onDelete: 'CASCADE'});
 transaction.belongsTo(user, {foreignKey: 'userId'});
 
 const app = express();

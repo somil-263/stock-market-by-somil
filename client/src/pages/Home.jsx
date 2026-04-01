@@ -29,7 +29,7 @@ function Home() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {marketData.map((stock) => (
-          <div onClick={() => navigate(`/app/trade/${stock.symbol}`)} 
+          <div onClick={() => navigate(`/app/trade/${stock.symbol}`, { state: { price: stock.price } })} 
             key={stock.id} 
             className="bg-slate-900 rounded-xl p-5 border border-slate-800 hover:border-slate-600 transition-all group flex flex-col justify-between"
           >

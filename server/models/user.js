@@ -26,8 +26,9 @@ const User = sequelize.define('User', {
         allowNull: false
     },
     balance:{
-        type: DataTypes.FLOAT,
-        defaultValue: 100000.00
+        type: DataTypes.DECIMAL(15, 2),
+        defaultValue: 100000.00,
+        allowNull: false
     },
     isVerified:{
         type: DataTypes.BOOLEAN,
