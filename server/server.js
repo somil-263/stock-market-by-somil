@@ -7,6 +7,7 @@ const user = require('./models/user');
 const stock = require('./models/stock');
 const portfolio = require('./models/portfolio');
 const transaction = require('./models/transaction');
+
 const cors = require('cors');
 
 user.hasMany(portfolio, {foreignKey: 'userID'});
@@ -30,7 +31,7 @@ app.use('/api/auth', require('./routes/authRoute'));
 app.use('/api/trade', require('./routes/tradeRoutes'));
 
 app.get('/', (req, res) => {
-    res.send('Hello World!, I am somil');
+    res.send('Hello World!, I am here for your paper trading journey');
 });
 
 if(PORT !== 'test'){

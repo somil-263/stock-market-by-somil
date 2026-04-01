@@ -2,7 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #0f172a; /* Mast dark theme background */
-  color: white;
+@layer base {
+  body {
+    @apply bg-slate-950 text-white antialiased;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-slate-950; 
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-800 rounded-full; 
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-700; 
 }

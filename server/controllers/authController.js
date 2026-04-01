@@ -40,7 +40,7 @@ const registerUser = async (req, res) => {
         })
 
         const emailMessage = `Welcome to Empire Trading, ${name}!\n\nUse This Otp for Verify the Account: ${generatedOtp}\n\nDon't share this OTP with anyone!`;
-        await sendEmail(newUser.email, "Verify Your Account", emailMessage);
+        sendEmail(newUser.email, emailMessage).catch(err => console.log("Email error in background:", err));
 
         res.status(201).json({
             message: "User registered successfully",
@@ -154,9 +154,54 @@ const getUserProfile = async (req, res) => {
     }
 }
 
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            return res.status(404).json({ message: "User is not logged in" });
+        }
+
+        const resetOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        user.otp = resetOtp; 
+        await user.save();
+
+        sendEmail(email, resetOtp).catch(err => console.log("Reset Email Error:", err));
+
+        res.status(200).json({ message: "OTP sent to your email!" });
+    } catch (error) {
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const user = await User.findOne({ where: { email } });
+
+        if (!user || user.otp !== otp) {
+            return res.status(400).json({ message: "Invalid OTP!" });
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        user.password = hashedPassword;
+        user.otp = null;
+        await user.save();
+
+        res.status(200).json({ message: "Password updated successfully!" });
+    } catch (error) {
+        res.status(500).json({ message: "Password reset failed." });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
     getUserProfile,
-    verifyOTP
+    verifyOTP,
+    forgotPassword,
+    resetPassword
 }
