@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/trade';
+const API_URL = "http://localhost:5000/api/trade";
 
 const buyStockAPI = async (symbol, quantity, price) => {
     try {
@@ -38,7 +38,7 @@ const fetchPortfolioAPI = async () => {
         
         return response.data; 
     } catch (error) {
-        throw error.response?.data?.message || 'Portfolio load nahi ho paya';
+        throw error.response?.data?.message || "Portfolio can't be loaded";
     }
 };
 
@@ -50,8 +50,20 @@ const fetchPassbookAPI = async () => {
         });
         return response.data;
     } catch (error) {
-        throw error.response?.data?.message || 'Passbook load nahi ho payi';
+        throw error.response?.data?.message || "Passbook can't be loaded";
     }
 };
 
-export { buyStockAPI, sellStockAPI, fetchPortfolioAPI, fetchPassbookAPI };
+const fetchMarketDataAPI = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API_URL}/market`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data?.message || 'Market Data Error';
+    }
+};
+
+export { buyStockAPI, sellStockAPI, fetchPortfolioAPI, fetchPassbookAPI, fetchMarketDataAPI };

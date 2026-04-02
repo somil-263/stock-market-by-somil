@@ -1,31 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { AdvancedRealTimeChart } from "react-ts-tradingview-widgets";
 import { buyStockAPI, sellStockAPI } from '../services/tradeService';
-import { useLocation } from 'react-router-dom';
+import { UserContext } from '../context/UserContext';
 
 function Trade() {
   const location = useLocation();
   const { symbol } = useParams();
   const navigate = useNavigate();
+  
+  const { updateBalanceLocally } = useContext(UserContext); 
 
-  const chartSymbol = symbol ? `BSE:${symbol.toUpperCase()}` : "BSE:SENSEX";
-  const currentPrice = location.state?.price || 1400.50;
+  const chartSymbol = `BINANCE:${symbol.toUpperCase()}`;
+  const currentPrice = location.state?.price || 0;
 
   const [qty, setQty] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const handleBuy = async () => {
     if (qty <= 0) {
-      alert("Please choose atleast 1 quantity");
+      alert("Please choose at least 1 quantity");
       return;
+    }
+
+    if (currentPrice <= 0) {
+        alert("Market price fetching, please wait...");
+        return;
     }
 
     setLoading(true);
     try {
       const result = await buyStockAPI(symbol, qty, currentPrice);
-      alert(`🎉 Success! ${result.message}\nRemaining Balance: ₹${result.remainingBalance}`);
-
+      
+      alert(`Success! Bought ${qty} ${symbol}.`);
       navigate('/app/portfolio');
     } catch (error) {
       alert(`🚨 Error: ${error}`);
@@ -35,13 +42,24 @@ function Trade() {
   };
 
   const handleSell = async () => {
-    if (qty <= 0) return alert("At least 1 quantity is required");
+    if (qty <= 0) {
+      alert("Please choose at least 1 quantity");
+      return;
+    }
+
+    if (currentPrice <= 0) {
+        alert("Market price fetching, please wait...");
+        return;
+    }
 
     setLoading(true);
     try {
       const result = await sellStockAPI(symbol, qty, currentPrice);
-      alert(`💸 Success! ${result.message}\nNew Balance: ₹${result.remainingBalance}`);
+      updateBalanceLocally(result.newBalance);
+
+      alert(`Success! $${result.saleAmount} added to your wallet!`);
       navigate('/app/portfolio');
+      
     } catch (error) {
       alert(`🚨 Error: ${error}`);
     } finally {
@@ -61,11 +79,15 @@ function Trade() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
           </button>
           <div>
-            <h1 className="text-2xl font-extrabold text-white">{symbol || "SENSEX"}</h1>
+            <h1 className="text-2xl font-extrabold text-white">{symbol || "MARKET"}</h1>
             <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Live Market
             </p>
           </div>
+        </div>
+        <div className="text-right hidden sm:block">
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">Execution Price</p>
+            <p className="text-xl font-black text-white">${Number(currentPrice).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
         </div>
       </div>
 

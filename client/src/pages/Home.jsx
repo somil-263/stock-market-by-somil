@@ -1,71 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { fetchPortfolioAPI } from '../services/tradeService';
+import useBinanceTicker from '../hooks/useBinanceTicker';
+
+const COINS = [
+  { id: 'BTCUSDT', name: 'Bitcoin', icon: '₿' },
+  { id: 'ETHUSDT', name: 'Ethereum', icon: '⧫' },
+  { id: 'SOLUSDT', name: 'Solana', icon: '◎' },
+  { id: 'DOGEUSDT', name: 'Dogecoin', icon: 'Ð' },
+  { id: 'XRPUSDT', name: 'Ripple', icon: '✕' },
+  { id: 'ADAUSDT', name: 'Cardano', icon: '₳' },
+  { id: 'DOTUSDT', name: 'Polkadot', icon: '●' },
+  { id: 'MATICUSDT', name: 'Polygon', icon: '⬢' }
+];
 
 function Home() {
   const navigate = useNavigate();
-  const [marketData] = useState([
-    { id: 1, symbol: 'RELIANCE', name: 'Reliance Industries', price: 2950.45, change: 1.25, isUp: true },
-    { id: 2, symbol: 'TCS', name: 'Tata Consultancy Services', price: 4120.00, change: 0.85, isUp: true },
-    { id: 3, symbol: 'HDFCBANK', name: 'HDFC Bank Ltd.', price: 1445.10, change: -1.15, isUp: false },
-    { id: 4, symbol: 'INFY', name: 'Infosys Limited', price: 1680.75, change: 2.10, isUp: true },
-    { id: 5, symbol: 'ZOMATO', name: 'Zomato Ltd.', price: 185.20, change: -3.40, isUp: false },
-    { id: 6, symbol: 'TATAMOTORS', name: 'Tata Motors Ltd.', price: 985.60, change: 4.50, isUp: true },
-  ]);
+  const [balance, setBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
+  
+  const marketData = useBinanceTicker(COINS.map(c => c.id));
+
+  useEffect(() => {
+    fetchPortfolioAPI()
+      .then(data => setBalance(data.currentBalance))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const getPriceColor = (current, prev) => {
+    if (!prev || current === prev) return 'text-slate-200';
+    return current > prev ? 'text-emerald-400' : 'text-red-400';
+  };
+
+  if (loading) return <div className="text-center text-indigo-400 mt-20 animate-pulse font-bold">Connecting to Market...</div>;
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in max-w-7xl mx-auto pb-10">
       
-      <div className="mb-8 flex justify-between items-end">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4 bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
         <div>
-          <h1 className="text-3xl font-bold mb-2 text-white">Market Overview</h1>
-          <p className="text-slate-400">Discover and trade top performing stocks.</p>
+          <h1 className="text-3xl font-extrabold text-white mb-2">Market Overview</h1>
+          <p className="text-sm text-emerald-400 font-bold flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping absolute"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 relative"></span>
+            Market is Live
+          </p>
         </div>
-        <div className="hidden sm:block">
-            <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-sm font-semibold border border-emerald-500/20">
-                Market Open 🟢
-            </span>
+        <div className="text-right">
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Available Funds</p>
+          <p className="text-3xl font-black text-white">${Number(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {marketData.map((stock) => (
-          <div onClick={() => navigate(`/app/trade/${stock.symbol}`, { state: { price: stock.price } })} 
-            key={stock.id} 
-            className="bg-slate-900 rounded-xl p-5 border border-slate-800 hover:border-slate-600 transition-all group flex flex-col justify-between"
-          >
-            <div className="flex justify-between items-start mb-4">
+      <h2 className="text-xl font-bold text-slate-200 mb-4 px-2">Top Crypto Assets</h2>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {COINS.map((coin) => {
+          const data = marketData[coin.id] || { price: 0, change: 0, prev: 0 };
+          const isUp = data.change >= 0;
+
+          return (
+            <div 
+              key={coin.id} 
+              onClick={() => navigate(`/app/trade/${coin.id}`, { state: { price: data.price, name: coin.name } })}
+              className="bg-slate-900 rounded-2xl p-6 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/80 transition-all cursor-pointer relative overflow-hidden"
+            >
+              <div className={`absolute -right-8 -bottom-8 w-32 h-32 rounded-full blur-3xl opacity-[0.15] ${isUp ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-xl border border-slate-700">{coin.icon}</div>
+                <div>
+                  <h3 className="font-bold text-white text-lg leading-tight">{coin.id}</h3>
+                  <p className="text-xs text-slate-400">{coin.name}</p>
+                </div>
+              </div>
+
               <div>
-                <h3 className="text-lg font-bold text-slate-200 group-hover:text-indigo-400 transition-colors">
-                  {stock.symbol}
-                </h3>
-                <p className="text-xs text-slate-500 font-medium truncate w-32">{stock.name}</p>
-              </div>
-              
-              <div className="text-right">
-                <p className="text-xl font-extrabold text-white">₹{stock.price.toFixed(2)}</p>
-                <p className={`text-sm font-bold flex items-center justify-end gap-1 ${stock.isUp ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {stock.isUp ? (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6"></path></svg>
-                  )}
-                  {Math.abs(stock.change)}%
+                <p className={`text-2xl font-black transition-colors duration-300 ${getPriceColor(data.price, data.prev)}`}>
+                  ${data.price > 0 ? data.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : '...'}
                 </p>
+                <span className={`text-sm font-bold mt-1 block ${isUp ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {isUp ? '▲' : '▼'} {(Math.abs(data.change) || 0).toFixed(2)}%
+                </span>
               </div>
             </div>
-
-            <div className="flex gap-2 mt-2">
-                <button className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg text-sm font-bold transition-colors">
-                    BUY
-                </button>
-                <button className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-lg text-sm font-bold transition-colors border border-slate-700">
-                    SELL
-                </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-
     </div>
   );
 }

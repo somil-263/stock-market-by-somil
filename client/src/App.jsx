@@ -11,6 +11,7 @@ import Portfolio from './pages/Portfolio';
 import History from './pages/History';
 import Profile from './pages/Profile';
 import Trade from './pages/Trade';
+import { UserProvider } from './context/UserContext';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -19,26 +20,28 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOTP />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        
-        <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route index element={<Navigate to="home" />} /> 
+    <UserProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           
-          <Route path="home" element={<Home />} />
-          <Route path="portfolio" element={<Portfolio />} />
-          <Route path="history" element={<History />} />
-          <Route path="profile" element={<Profile />} />
-          <Route path="trade/:symbol" element={<Trade />} />
-        </Route>
-        
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    </Router>
+          <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route index element={<Navigate to="home" />} /> 
+            
+            <Route path="home" element={<Home />} />
+            <Route path="portfolio" element={<Portfolio />} />
+            <Route path="history" element={<History />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="trade/:symbol" element={<Trade />} />
+          </Route>
+          
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </Router>
+    </UserProvider>
   );
 }
 

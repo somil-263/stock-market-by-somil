@@ -1,5 +1,4 @@
 const User = require('../models/user');
-
 const tradeService = require('../services/tradeService');
 
 const buyStock = async (req, res) => {
@@ -50,6 +49,7 @@ const getPortfolio = async (req, res) => {
             message: "My Portfolio",
             currentBalance: user.balance,
             totalUniqueStocks: result.length,
+            name: user.name,
             portfolio: result
         })
     }
@@ -74,7 +74,6 @@ const getPassbook = async (req, res) => {
         res.status(500).json({message: "Internal server error", details: error.message})
     }
 }
-
 
 module.exports = {
     buyStock,
