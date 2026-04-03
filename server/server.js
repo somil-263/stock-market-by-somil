@@ -18,7 +18,10 @@ transaction.belongsTo(user, {foreignKey: 'userId'});
 const app = express();
 connectDB();
 
-app.use(cors());
+app.use(cors({
+  origin: "https://empire-trading-frontend-1cio.vercel.app/",
+  credentials: true
+}));
 app.use(express.json());
 
 sequelize.sync({alter: true})

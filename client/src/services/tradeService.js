@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = "http://localhost:5000/api/trade";
+const API_URL = 'https://empire-trading-backend.onrender.com/api/trade';
 
 const buyStockAPI = async (symbol, quantity, price) => {
     try {
