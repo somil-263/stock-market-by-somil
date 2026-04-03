@@ -19,7 +19,7 @@ const app = express();
 connectDB();
 
 app.use(cors({
-  origin: "https://empire-trading-frontend-1cio.vercel.app/",
+  origin: "https://empire-trading-frontend-1cio.vercel.app",
   credentials: true
 }));
 app.use(express.json());
